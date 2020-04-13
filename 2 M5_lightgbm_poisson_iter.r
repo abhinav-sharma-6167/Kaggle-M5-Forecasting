@@ -122,6 +122,7 @@ m_lgb <- lgb.train(params = p,
                    valids = list(valid = xval),
                    early_stopping_rounds = 400,
                    eval_freq = 200)
+                        
 
 cat("Best score:", m_lgb$best_score, "at", m_lgb$best_iter, "iteration")                         
 lgb.plot.importance(lgb.importance(m_lgb), 20)
