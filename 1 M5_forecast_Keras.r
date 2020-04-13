@@ -2,6 +2,7 @@
 setwd("C:/Users/as16220/Desktop/Kaggle/M5")
 suppressMessages({
   library(data.table)
+  library(ggplot2)
   library(RcppRoll)
   library(dplyr)
   library(vroom)
