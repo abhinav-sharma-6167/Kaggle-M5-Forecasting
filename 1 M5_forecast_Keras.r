@@ -172,6 +172,7 @@ new_model <- function(lr = 0.00007) {
   # dense_input = layer_input(length(dense_cols), name = "dense1", dtype = "float32")
   # 
   # Embedded layer_input
+  #Create Deep learning Network
   wday_input = layer_input(1, name = "wday", dtype = "int8")
   month_input = layer_input(1, name = "month", dtype = "int8")
   year_input = layer_input(1, name = "year", dtype = "int8")
