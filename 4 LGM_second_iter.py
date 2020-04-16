@@ -88,6 +88,49 @@ def create_fea(dt):
         else:
             dt[date_feat_name] = getattr(dt["date"].dt, date_feat_func).astype("int16")
             
-FIRST_DAY = 350 # If you want to load all the data set it to '1' -->  Great  memory overflow  risk !
+FIRST_DAY = 550 #Replace it with higher number for recent data considerations
 df = create_dt(is_train=True, first_day= FIRST_DAY)
 df.shape
+
+p <- list(objective = "poisson",
+          metric ="rmse",
+          force_row_wise = TRUE,
+          learning_rate = 0.075,
+          sub_feature = 0.8,
+          sub_row = 0.75,
+          bagging_freq = 1,
+          lambda_l2 = 0.1,
+          nthread = 4)
+
+m_lgb <- lgb.train(params = p,
+                   data = xtr,
+                   nrounds = 2000,
+                   valids = list(valid = xval),
+                   early_stopping_rounds = 400,
+                   eval_freq = 200)
+                        
+
+cat("Best score:", m_lgb$best_score, "at", m_lgb$best_iter, "iteration")                         
+lgb.plot.importance(lgb.importance(m_lgb), 20)
+
+rm(xtr, xval, p)
+free()
+
+#---------------------------
+cat("Forecasting...\n")
+
+te <- create_dt(FALSE)
+
+for (day in as.list(seq(fday, length.out = 2*h, by = "day"))){
+  cat(as.character(day), " ")
+  tst <- te[date >= day - max_lags & date <= day]
+  create_fea(tst)
+  tst <- data.matrix(tst[date == day][, c("id", "sales", "date") := NULL])
+  te[date == day, sales := predict(m_lgb, tst)]
+}
+
+te[date >= fday
+   ][date >= fday+h, id := sub("validation", "evaluation", id)
+     ][, d := paste0("F", 1:28), by = id
+       ][, dcast(.SD, id ~ d, value.var = "sales")
+         ][, fwrite(.SD, "sub_dt_lgb_v2.csv")]
